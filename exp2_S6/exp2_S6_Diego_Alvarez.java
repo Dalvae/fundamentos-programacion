@@ -32,16 +32,15 @@ class Ticket {
   EstadoTicket estado;
   long tiempoReserva;
   TipoDescuento descuento;
+  double precioFinal;
 
   public Ticket(TipoTicket tipo) {
     this.tipo = tipo;
     this.estado = EstadoTicket.DISPONIBLE;
     this.descuento = TipoDescuento.NINGUNO;
+    this.precioFinal = 0;
   }
 
-  public double calcularPrecio() {
-    return tipo.precio * (1 - descuento.valor);
-  }
 }
 
 public class exp2_S6_Diego_Alvarez {
@@ -106,18 +105,30 @@ public class exp2_S6_Diego_Alvarez {
     sc.close();
   }
 
+  private Ticket seleccionarTicketPorNumero(Scanner sc, String mensaje) {
+    System.out.print(mensaje + " (0 para cancelar): ");
+    int num = Integer.parseInt(sc.nextLine());
+
+    if (num == 0) {
+      System.out.println("Operación cancelada.");
+      return null;
+    }
+
+    if (num < 1 || num > tickets.size()) {
+      System.out.println("Número de ticket inválido.");
+      return null;
+    }
+
+    return tickets.get(num - 1);
+  }
+
   private void reservarEntrada(Scanner sc) {
     actualizarReservas();
     mostrarTickets(EstadoTicket.DISPONIBLE);
 
-    System.out.print("Ingrese número de ticket a reservar (0 para cancelar): ");
-    int num = Integer.parseInt(sc.nextLine());
-
-    if (num < 1 || num > tickets.size())
+    Ticket ticket = seleccionarTicketPorNumero(sc, "Ingrese número de ticket a reservar");
+    if (ticket == null)
       return;
-
-    Ticket ticket = tickets.get(num - 1);
-
     if (ticket.estado == EstadoTicket.DISPONIBLE) {
       ticket.estado = EstadoTicket.RESERVADO;
       ticket.tiempoReserva = System.currentTimeMillis();
@@ -131,13 +142,11 @@ public class exp2_S6_Diego_Alvarez {
     actualizarReservas();
     mostrarTickets(EstadoTicket.DISPONIBLE);
 
-    System.out.print("Ingrese número de ticket a comprar (0 para cancelar): ");
-    int num = Integer.parseInt(sc.nextLine());
-
-    if (num < 1 || num > tickets.size())
+    Ticket ticket = seleccionarTicketPorNumero(sc, "Ingrese número de ticket a comprar");
+    if (ticket == null)
       return;
 
-    Ticket ticket = tickets.get(num - 1);
+    int num = tickets.indexOf(ticket) + 1;
 
     if (ticket.estado != EstadoTicket.DISPONIBLE) {
       System.out.println("El ticket no está disponible");
@@ -161,7 +170,10 @@ public class exp2_S6_Diego_Alvarez {
         ticket.descuento = TipoDescuento.NINGUNO;
     }
 
+    double precioCalculado = ticket.tipo.precio * (1 - ticket.descuento.valor);
+    ticket.precioFinal = precioCalculado;
     ticket.estado = EstadoTicket.VENDIDO;
+
     System.out.println("¡Compra exitosa!");
     mostrarBoleta(num, ticket);
   }
@@ -170,13 +182,9 @@ public class exp2_S6_Diego_Alvarez {
     actualizarReservas();
     mostrarTickets(EstadoTicket.RESERVADO, EstadoTicket.VENDIDO);
 
-    System.out.print("Ingrese número de ticket a modificar (0 para cancelar): ");
-    int num = Integer.parseInt(sc.nextLine());
-
-    if (num < 1 || num > tickets.size())
+    Ticket ticket = seleccionarTicketPorNumero(sc, "Ingrese número de ticket a modificar");
+    if (ticket == null)
       return;
-
-    Ticket ticket = tickets.get(num - 1);
 
     System.out.println("Seleccione nuevo estado:");
     System.out.println("1. Disponible");
@@ -193,7 +201,7 @@ public class exp2_S6_Diego_Alvarez {
         nuevoEstado = EstadoTicket.RESERVADO;
         break;
       case 3:
-        nuevoEstado = EstadoTicket.VENDIDO;
+        nuevoEstado = EstadoTicket.VENDIDO; // que pasa acá, deberia borrarse a 0 el precioFinal?
         break;
       default:
         return;
@@ -218,6 +226,19 @@ public class exp2_S6_Diego_Alvarez {
         default:
           ticket.descuento = TipoDescuento.NINGUNO;
       }
+
+      double precioCalculado = ticket.tipo.precio * (1 - ticket.descuento.valor);
+      ticket.precioFinal = precioCalculado;
+
+    } else {
+
+      ticket.precioFinal = 0;
+      ticket.descuento = TipoDescuento.NINGUNO;
+      if (nuevoEstado == EstadoTicket.RESERVADO) {
+        ticket.tiempoReserva = System.currentTimeMillis();
+      } else {
+        ticket.tiempoReserva = 0;
+      }
     }
 
     System.out.println("Estado actualizado correctamente");
@@ -226,13 +247,11 @@ public class exp2_S6_Diego_Alvarez {
   private void mostrarBoleta(Scanner sc) {
     mostrarTickets(EstadoTicket.VENDIDO);
 
-    System.out.print("Ingrese número de ticket para ver boleta (0 para cancelar): ");
-    int num = Integer.parseInt(sc.nextLine());
-
-    if (num < 1 || num > tickets.size())
+    Ticket ticket = seleccionarTicketPorNumero(sc, "Ingrese número de ticket para ver boleta");
+    if (ticket == null)
       return;
 
-    Ticket ticket = tickets.get(num - 1);
+    int num = tickets.indexOf(ticket) + 1;
 
     if (ticket.estado == EstadoTicket.VENDIDO) {
       mostrarBoleta(num, ticket);
@@ -246,8 +265,8 @@ public class exp2_S6_Diego_Alvarez {
     System.out.println("Número: " + num);
     System.out.println("Tipo: " + ticket.tipo);
     System.out.println("Precio original: $" + ticket.tipo.precio);
-    System.out.println("Descuento: " + (ticket.descuento.valor * 100) + "%");
-    System.out.println("Total a pagar: $" + ticket.calcularPrecio());
+    System.out.println("Descuento aplicado: " + ticket.descuento + " (" + (ticket.descuento.valor * 100) + "%)");
+    System.out.println("Total a pagar: $" + ticket.precioFinal);
     System.out.println("================");
   }
 
@@ -286,7 +305,7 @@ public class exp2_S6_Diego_Alvarez {
     for (Ticket ticket : tickets) {
       if (ticket.estado == EstadoTicket.VENDIDO) {
         vendidos++;
-        total += ticket.calcularPrecio();
+        total += ticket.precioFinal;
       }
     }
 
