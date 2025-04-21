@@ -77,6 +77,7 @@ public class exp2_S6_Diego_Alvarez {
       System.out.println("5. Salir");
       System.out.print("Seleccione opción: ");
 
+      // PUNTO DE DEPURACIÓN: Control de selección de opciones del menú principal
       opcion = Integer.parseInt(sc.nextLine());
 
       switch (opcion) {
@@ -109,6 +110,7 @@ public class exp2_S6_Diego_Alvarez {
     System.out.print(mensaje + " (0 para cancelar): ");
     int num = Integer.parseInt(sc.nextLine());
 
+    // PUNTO DE DEPURACIÓN: Validación de selección de ticket válido
     if (num == 0) {
       System.out.println("Operación cancelada.");
       return null;
@@ -129,10 +131,12 @@ public class exp2_S6_Diego_Alvarez {
     Ticket ticket = seleccionarTicketPorNumero(sc, "Ingrese número de ticket a reservar");
     if (ticket == null)
       return;
+
+    // PUNTO DE DEPURACIÓN: Verificación del estado del ticket antes de reservar
     if (ticket.estado == EstadoTicket.DISPONIBLE) {
       ticket.estado = EstadoTicket.RESERVADO;
       ticket.tiempoReserva = System.currentTimeMillis();
-      System.out.println("¡Reserva exitosa! Tienes " + TIEMPO_RESERVA + " para completar la compra");
+      System.out.println("¡Reserva exitosa! Tienes " + TIEMPO_RESERVA + " segundos para completar la compra");
     } else {
       System.out.println("El ticket no está disponible");
     }
@@ -148,6 +152,7 @@ public class exp2_S6_Diego_Alvarez {
 
     int num = tickets.indexOf(ticket) + 1;
 
+    // PUNTO DE DEPURACIÓN: Validación de disponibilidad de ticket para compra
     if (ticket.estado != EstadoTicket.DISPONIBLE) {
       System.out.println("El ticket no está disponible");
       return;
@@ -170,6 +175,7 @@ public class exp2_S6_Diego_Alvarez {
         ticket.descuento = TipoDescuento.NINGUNO;
     }
 
+    // PUNTO DE DEPURACIÓN: Cálculo del precio final con descuento aplicado
     double precioCalculado = ticket.tipo.precio * (1 - ticket.descuento.valor);
     ticket.precioFinal = precioCalculado;
     ticket.estado = EstadoTicket.VENDIDO;
@@ -186,30 +192,19 @@ public class exp2_S6_Diego_Alvarez {
     if (ticket == null)
       return;
 
-    System.out.println("Seleccione nuevo estado:");
-    System.out.println("1. Disponible");
-    System.out.println("2. Reservado");
-    System.out.println("3. Vendido");
+    System.out.println("Seleccione nuevo estado (1.Disponible, 2.Reservado, 3.Vendido): ");
     int opcion = Integer.parseInt(sc.nextLine());
 
-    EstadoTicket nuevoEstado = EstadoTicket.DISPONIBLE;
-    switch (opcion) {
-      case 1:
-        nuevoEstado = EstadoTicket.DISPONIBLE;
-        break;
-      case 2:
-        nuevoEstado = EstadoTicket.RESERVADO;
-        break;
-      case 3:
-        nuevoEstado = EstadoTicket.VENDIDO; // que pasa acá, deberia borrarse a 0 el precioFinal?
-        break;
-      default:
-        return;
+    // PUNTO DE DEPURACIÓN: Transición de estado del ticket durante modificación
+    if (opcion >= 1 && opcion <= 3) {
+      EstadoTicket[] estados = EstadoTicket.values();
+      ticket.estado = estados[opcion - 1];
+    } else {
+      System.out.println("Opción inválida");
+      return;
     }
 
-    ticket.estado = nuevoEstado;
-
-    if (nuevoEstado == EstadoTicket.VENDIDO) {
+    if (ticket.estado == EstadoTicket.VENDIDO) {
       System.out.println("Seleccione descuento:");
       System.out.println("1. Estudiante (20%)");
       System.out.println("2. Tercera edad (30%)");
@@ -231,10 +226,9 @@ public class exp2_S6_Diego_Alvarez {
       ticket.precioFinal = precioCalculado;
 
     } else {
-
       ticket.precioFinal = 0;
       ticket.descuento = TipoDescuento.NINGUNO;
-      if (nuevoEstado == EstadoTicket.RESERVADO) {
+      if (ticket.estado == EstadoTicket.RESERVADO) {
         ticket.tiempoReserva = System.currentTimeMillis();
       } else {
         ticket.tiempoReserva = 0;
@@ -253,6 +247,8 @@ public class exp2_S6_Diego_Alvarez {
 
     int num = tickets.indexOf(ticket) + 1;
 
+    // PUNTO DE DEPURACIÓN: Verificación de estado del ticket antes de mostrar
+    // boleta
     if (ticket.estado == EstadoTicket.VENDIDO) {
       mostrarBoleta(num, ticket);
     } else {
@@ -261,6 +257,7 @@ public class exp2_S6_Diego_Alvarez {
   }
 
   private void mostrarBoleta(int num, Ticket ticket) {
+    // PUNTO DE DEPURACIÓN: Generación de datos para la boleta
     System.out.println("\n=== BOLETA ===");
     System.out.println("Número: " + num);
     System.out.println("Tipo: " + ticket.tipo);
@@ -273,6 +270,7 @@ public class exp2_S6_Diego_Alvarez {
   private void actualizarReservas() {
     long ahora = System.currentTimeMillis();
     for (Ticket ticket : tickets) {
+      // PUNTO DE DEPURACIÓN: Control de expiración de reservas
       if (ticket.estado == EstadoTicket.RESERVADO) {
         long diferencia = TimeUnit.MILLISECONDS.toSeconds(ahora - ticket.tiempoReserva);
         if (diferencia > TIEMPO_RESERVA) {
@@ -283,7 +281,7 @@ public class exp2_S6_Diego_Alvarez {
   }
 
   private void mostrarTickets(EstadoTicket... estados) {
-    System.out.println("\nTICKETS:");
+    System.out.println("\nTickets:");
     for (int i = 0; i < tickets.size(); i++) {
       Ticket ticket = tickets.get(i);
       for (EstadoTicket estado : estados) {
@@ -302,6 +300,7 @@ public class exp2_S6_Diego_Alvarez {
     int vendidos = 0;
     double total = 0;
 
+    // PUNTO DE DEPURACIÓN: Cálculo de estadísticas de ventas
     for (Ticket ticket : tickets) {
       if (ticket.estado == EstadoTicket.VENDIDO) {
         vendidos++;
